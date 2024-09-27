@@ -279,7 +279,7 @@
     </section>
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
     <script>
-        const socket = io('http://localhost:3002');;
+        const socket = io('https://videoresponse.onepgr.com:3002');
         const chatbotIcon = document.getElementById('chatbot-icon');
         const chatbotContainer = document.getElementById('chatbot-container');
         const form = document.getElementById('form');
@@ -289,7 +289,6 @@
 
         let convState = [];
         let convHistory = "";
-
         chatbotIcon.addEventListener('click', () => {
             chatbotContainer.style.display = chatbotContainer.style.display === 'none' || chatbotContainer.style.display === '' ? 'flex' : 'none';
         });
@@ -299,25 +298,19 @@
             sendMessage();
         });
         function sendMessage() {
-    const message = userInput.value.trim();   
-    if (message) {
-        addMessageToChat('human', message);   
-        userInput.value = '';   
-
-       
-        socket.emit('chat message', { question: message, history: convHistory });
-
-        showLoadingAnimation();  
-    }
-}
-
+            const message = userInput.value.trim();
+          // console.log('Received question:', message);  
+            if (message) {
+                addMessageToChat('human', message);
+                userInput.value = '';
+                socket.emit('chat message', { question: message, history: convHistory });
+                showLoadingAnimation();
+            }
+        }
         function addMessageToChat(sender, message) {
             const speechBubble = document.createElement('div');
             speechBubble.classList.add('speech', `speech-${sender}`);
-
-          
             speechBubble.innerHTML = message;
-
             chatbotConversation.appendChild(speechBubble);
             chatbotConversation.scrollTop = chatbotConversation.scrollHeight;
 
@@ -335,22 +328,23 @@
         socket.on('chat message', (response) => {
             hideLoadingAnimation();
             addMessageToChat('ai', response);
-
             convState.push(response);
             convHistory = formatConvHistory(convState);
             convState = [];
         });
-
+        
         function formatConvHistory(messages) {
             let formattedHistory = '';
             for (let i = 0; i < messages.length; i += 2) {
                 const humanMessage = messages[i] ? `Human: ${messages[i]}` : '';
                 const aiMessage = messages[i + 1] ? `AI: ${messages[i + 1]}` : '';
                 formattedHistory += `${humanMessage}\n${aiMessage}\n\n`;
+              //  console.log('Received Ans:', aiMessage);
             }
+       
             return formattedHistory;
         }
-
+       
         socket.on('connect_error', () => {
             hideLoadingAnimation();
             addMessageToChat('ai', 'Error connecting to the server. Please try again later.');
